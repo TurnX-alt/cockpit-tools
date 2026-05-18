@@ -22,6 +22,20 @@
 
 ---
 
+> **安全加固分支 (Security-Hardened Fork)**
+> 
+> 本分支基于 [jlcodes99/cockpit-tools](https://github.com/jlcodes99/cockpit-tools) 上游，增加了以下安全加固：
+> - **移除第三方广告**: 从 `announcements.json` 中移除远程控制的第三方推广链接，消除应用内广告注入风险
+> - **CSP 策略**: 将 `tauri.conf.json` 中 `csp: null` 替换为严格的内容安全策略
+> - **公告拉取隔离**: 将公告拉取 URL 改为本 fork，避免上游广告推送
+> - **发布流程加固**: 在 `release.yml` 中添加主分支守卫，防止从集成分支误发布 (v0.23.0 事件修复)
+> 
+> 安全审计报告: 参见 [SECURITY_AUDIT_REPORT.md](https://github.com/TurnX-alt/AiMaMi/blob/main/../SECURITY_AUDIT_REPORT.md)
+> 
+> 上游 PR: [#805](https://github.com/jlcodes99/cockpit-tools/pull/805)
+
+---
+
 ## 功能概览
 
 ### 1. 仪表盘 (Dashboard)
