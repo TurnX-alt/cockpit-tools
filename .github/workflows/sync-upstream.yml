@@ -1,0 +1,95 @@
+name: Sync Upstream
+
+on:
+  schedule:
+    - cron: '41 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream
+        id: fetch
+        run: |
+          git remote add upstream https://github.com/jlcodes99/cockpit-tools.git
+          git fetch upstream main
+          echo "upstream_sha=$(git rev-parse upstream/main)" >> $GITHUB_OUTPUT
+          echo "head_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Check if already up to date
+        id: check
+        run: |
+          if [ "${{ steps.fetch.outputs.upstream_sha }}" = "${{ steps.fetch.outputs.head_sha }}" ]; then
+            echo "Already up to date with upstream."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Merge upstream/main
+        if: steps.check.outputs.skip == 'false'
+        id: merge
+        run: |
+          if git merge upstream/main --no-edit -m "sync: merge upstream/main into security-hardened fork"; then
+            echo "success=true" >> $GITHUB_OUTPUT
+          else
+            echo "success=false" >> $GITHUB_OUTPUT
+            git merge --abort
+            git reset --hard HEAD
+          fi
+
+      - name: Push merged changes
+        if: steps.merge.outputs.success == 'true'
+        run: git push origin main
+
+      - name: Create conflict issue
+        if: steps.merge.outputs.success == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner, repo, state: 'open',
+              labels: ['upstream-sync-conflict']
+            });
+            if (existing.length === 0) {
+              await github.rest.issues.create({
+                owner, repo,
+                title: '[AUTO] 上游合并冲突 — 需手动处理',
+                body: `## 上游同步冲突
+
+自动合并 \`upstream/main\` (jlcodes99/cockpit-tools) 时发生冲突。
+
+### 手动处理步骤
+\`\`\`bash
+git clone git@github.com:${owner}/${repo}.git
+cd ${repo}
+git remote add upstream https://github.com/jlcodes99/cockpit-tools.git
+git fetch upstream main
+git checkout main
+git merge upstream/main
+# 解决冲突
+git push origin main
+\`\`\`
+
+### 注意
+安全加固改动（广告移除、CSP策略、公告隔离、发布流程加固）可能与上游新代码冲突，请仔细审查并确保安全加固不被覆盖。`,
+                labels: ['upstream-sync-conflict']
+              });
+            }
