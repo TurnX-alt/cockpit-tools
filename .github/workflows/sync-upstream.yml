@@ -111,15 +111,26 @@ jobs:
               '### 注意',
               '安全加固改动（广告移除、CSP策略、公告隔离、发布流程加固）可能与上游新代码冲突，请仔细审查并确保安全加固不被覆盖。'
             ].join('\n');
-            const { data: existing } = await github.rest.issues.listForRepo({
-              owner, repo, state: 'open',
-              labels: ['upstream-sync-conflict']
-            });
-            if (existing.length === 0) {
-              await github.rest.issues.create({
-                owner, repo,
-                title: '[AUTO] upstream merge conflict',
-                body: body,
+            try {
+              const { data: existing } = await github.rest.issues.listForRepo({
+                owner, repo, state: 'open',
                 labels: ['upstream-sync-conflict']
               });
+              if (existing.length === 0) {
+                await github.rest.issues.create({
+                  owner, repo,
+                  title: '[AUTO] upstream merge conflict',
+                  body: body,
+                  labels: ['upstream-sync-conflict']
+                });
+              }
+            } catch (e) {
+              if (e.status === 410 || e.message.includes('disabled')) {
+                core.warning('Issues are disabled in this repository. Writing conflict notice to step summary instead.');
+                core.summary.addHeading('Upstream Merge Conflict', 2);
+                core.summary.addRawText(body, true);
+                await core.summary.write();
+              } else {
+                throw e;
+              }
             }
