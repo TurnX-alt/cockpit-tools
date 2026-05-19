@@ -65,6 +65,25 @@ jobs:
         if: steps.merge.outputs.success == 'true'
         run: git push origin main
 
+      - name: Create release tag
+        if: steps.merge.outputs.success == 'true'
+        id: tag
+        shell: bash
+        run: |
+          VERSION="$(node -e "console.log(require(require('path').join(process.env.GITHUB_WORKSPACE, 'package.json')).version)")"
+          DATESTAMP="$(date +%Y%m%d)"
+          TAG="v${VERSION}+${DATESTAMP}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, skipping release creation."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            git tag "$TAG"
+            git push origin "$TAG"
+            echo "Created and pushed release tag: $TAG"
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Create conflict issue
         if: steps.merge.outputs.success == 'false'
         uses: actions/github-script@v7
