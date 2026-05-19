@@ -128,7 +128,7 @@ jobs:
               if (e.status === 410 || e.message.includes('disabled')) {
                 core.warning('Issues are disabled in this repository. Writing conflict notice to step summary instead.');
                 core.summary.addHeading('Upstream Merge Conflict', 2);
-                core.summary.addRawText(body, true);
+                core.summary.addRaw(body, true);
                 await core.summary.write();
               } else {
                 throw e;
