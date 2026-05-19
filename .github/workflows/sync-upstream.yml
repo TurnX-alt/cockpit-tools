@@ -72,6 +72,25 @@ jobs:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
+            const body = [
+              '## 上游同步冲突',
+              '',
+              '自动合并 upstream/main (jlcodes99/cockpit-tools) 时发生冲突。',
+              '',
+              '### 手动处理步骤',
+              '',
+              '    git clone git@github.com:' + owner + '/' + repo + '.git',
+              '    cd ' + repo,
+              '    git remote add upstream https://github.com/jlcodes99/cockpit-tools.git',
+              '    git fetch upstream main',
+              '    git checkout main',
+              '    git merge upstream/main',
+              '    # resolve conflicts',
+              '    git push origin main',
+              '',
+              '### 注意',
+              '安全加固改动（广告移除、CSP策略、公告隔离、发布流程加固）可能与上游新代码冲突，请仔细审查并确保安全加固不被覆盖。'
+            ].join('\n');
             const { data: existing } = await github.rest.issues.listForRepo({
               owner, repo, state: 'open',
               labels: ['upstream-sync-conflict']
@@ -79,25 +98,8 @@ jobs:
             if (existing.length === 0) {
               await github.rest.issues.create({
                 owner, repo,
-                title: '[AUTO] 上游合并冲突 — 需手动处理',
-                body: `## 上游同步冲突
-
-自动合并 \`upstream/main\` (jlcodes99/cockpit-tools) 时发生冲突。
-
-### 手动处理步骤
-\`\`\`bash
-git clone git@github.com:${owner}/${repo}.git
-cd ${repo}
-git remote add upstream https://github.com/jlcodes99/cockpit-tools.git
-git fetch upstream main
-git checkout main
-git merge upstream/main
-# 解决冲突
-git push origin main
-\`\`\`
-
-### 注意
-安全加固改动（广告移除、CSP策略、公告隔离、发布流程加固）可能与上游新代码冲突，请仔细审查并确保安全加固不被覆盖。`,
+                title: '[AUTO] upstream merge conflict',
+                body: body,
                 labels: ['upstream-sync-conflict']
               });
             }
