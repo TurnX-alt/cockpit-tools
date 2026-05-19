@@ -53,6 +53,7 @@ jobs:
         if: steps.check.outputs.skip == 'false'
         id: merge
         run: |
+          git checkout -B main
           if git merge upstream/main --no-edit -m "sync: merge upstream/main into security-hardened fork"; then
             echo "success=true" >> $GITHUB_OUTPUT
           else
@@ -63,7 +64,7 @@ jobs:
 
       - name: Push merged changes
         if: steps.merge.outputs.success == 'true'
-        run: git push origin main
+        run: git push origin HEAD:main
 
       - name: Create release tag
         if: steps.merge.outputs.success == 'true'
