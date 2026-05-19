@@ -72,7 +72,7 @@ jobs:
         run: |
           VERSION="$(node -e "console.log(require(require('path').join(process.env.GITHUB_WORKSPACE, 'package.json')).version)")"
           DATESTAMP="$(date +%Y%m%d)"
-          TAG="v${VERSION}+${DATESTAMP}"
+          TAG="v${VERSION}-${DATESTAMP}"
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "Tag $TAG already exists, skipping release creation."
             echo "exists=true" >> "$GITHUB_OUTPUT"

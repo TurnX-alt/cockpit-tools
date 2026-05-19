@@ -87,8 +87,9 @@ jobs:
         shell: bash
         run: |
           EXPECTED_TAG="v${{ steps.app_version.outputs.VERSION }}"
-          if [ "${GITHUB_REF_NAME}" != "${EXPECTED_TAG}" ]; then
+          if [[ "${GITHUB_REF_NAME}" != "${EXPECTED_TAG}" && "${GITHUB_REF_NAME}" != "${EXPECTED_TAG}-"* ]]; then
             echo "Tag (${GITHUB_REF_NAME}) does not match package.json version (${EXPECTED_TAG})."
+            echo "Accepted formats: v${VERSION} or v${VERSION}-YYYYMMDD"
             exit 1
           fi
 
