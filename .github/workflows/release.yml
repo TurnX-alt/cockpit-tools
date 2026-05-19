@@ -34,13 +34,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "npm"
+
+      - name: Set up pnpm
+        shell: bash
+        run: |
+          npm install -g pnpm@10.26.2
+          pnpm config set auto-install-peers true
 
       - name: Install frontend dependencies
-        run: npm install
+        run: pnpm install --frozen-lockfile
 
       - name: Sync versions
-        run: npm run sync-version
+        run: pnpm run sync-version
 
       - name: Read app version
         id: app_version

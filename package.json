@@ -2,16 +2,17 @@
   "name": "cockpit-tools",
   "private": true,
   "version": "0.23.10",
+  "packageManager": "pnpm@10.26.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "typecheck": "tsc --noEmit",
-    "prebuild": "npm run typecheck",
-    "build": "npm run sync-version && tsc && vite build",
+    "prebuild": "pnpm run typecheck",
+    "build": "pnpm run sync-version && tsc && vite build",
     "release:preflight": "node scripts/release/preflight.cjs",
     "preview": "vite preview",
-    "pretauri": "npm run typecheck",
-    "tauri": "npm run sync-version && tauri",
+    "pretauri": "pnpm run typecheck",
+    "tauri": "pnpm run sync-version && tauri",
     "sync-version": "node scripts/sync-version.js"
   },
   "dependencies": {
